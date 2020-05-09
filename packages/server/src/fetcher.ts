@@ -5,6 +5,7 @@ export interface IJob {
   keywords: string[];
   url: string;
   user: number;
+  id: string;
 }
 
 interface IResource {
@@ -14,11 +15,12 @@ interface IResource {
 export async function getScrapingJob(resource: IResource) {
   try {
     const jobs = await resource.getJobs();
-    const { url, selectors, keywords } = jobs?.[0] ?? {};
-    if (!url || !selectors || !keywords) {
+    const { id, url, selectors, keywords } = jobs?.[0] ?? {};
+    if (!url || !selectors || !keywords || !id) {
       throw new Error('missing job info');
     }
     return {
+      id,
       url,
       selectors,
       keywords,

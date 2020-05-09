@@ -1,13 +1,17 @@
+import express from 'express';
+
 import { scrape } from './scrape';
 import { getScrapingJob } from './fetcher';
 import { DB } from './db';
-import express from 'express';
+import {Store} from './store';
 
 const PORT = process.env.PORT || 8000;
 
 const app = express();
 
 const db = new DB();
+
+const store = new Store();
 
 (async function init() {
   await db.connect();
@@ -17,6 +21,7 @@ const db = new DB();
       const scrapedProducts = await executeScrape();
       res.send(scrapedProducts);
     } catch (e) {
+      res.statusMessage = e;
       res.sendStatus(500);
     }
   });
@@ -27,7 +32,8 @@ const db = new DB();
 })();
 
 async function executeScrape() {
-  const { url, selectors, keywords } = await getScrapingJob(db);
+  const { id, url, selectors, keywords } = await getScrapingJob(db);
   const scrapedProducts = await scrape(url, selectors, keywords);
+  store.storeScrape(id, scrapedProducts);
   return scrapedProducts;
 }

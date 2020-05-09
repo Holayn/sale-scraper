@@ -1,7 +1,7 @@
 import axios from 'axios';
 import cheerio from 'cheerio';
 
-interface IProduct {
+export interface IProduct {
   name: string;
   originalPrice: string;
   salePrice: string;

@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 import { ISelectors } from './scrape';
-import { IJob } from './fetcher';
 
 require('dotenv').config();
 
@@ -11,6 +10,18 @@ const options = {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 };
+
+interface IJobModelItem {
+  selectors: ISelectors;
+  keywords: string[];
+  url: string;
+  user: number;
+}
+
+interface IResponseItem {
+  _id: string;
+  _doc: IJobModelItem;
+}
 
 export class DB {
   connection: any;
@@ -52,8 +63,11 @@ export class DB {
       const query = this.jobModel.find({});
       const res = await query.exec();
 
-      return res.map((job: any) => {
-        return job as IJob;
+      return res.map((job: IResponseItem) => {
+        return {
+          ...job._doc,
+          id: job._id,
+        };
       });
     } catch (e) {
       throw new Error(`something went wrong with fetching: ${e}`);
