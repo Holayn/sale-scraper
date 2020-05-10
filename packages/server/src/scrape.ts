@@ -11,6 +11,7 @@ export interface IProduct {
   originalPrice: string;
   salePrice: string;
   size: string;
+  link: string;
 }
 
 export interface ISelectors {
@@ -19,6 +20,7 @@ export interface ISelectors {
   originalPrice: string;
   salePrice: string;
   size: string;
+  link: string;
 }
 
 const browser = puppeteer.launch({
@@ -43,10 +45,19 @@ export async function scrape(url: string, selectors: ISelectors) {
       originalPrice: getElementText($, selectors.originalPrice, elem),
       salePrice: getElementText($, selectors.salePrice, elem),
       size: getElementText($, selectors.size, elem),
+      link: getElementAttribute($, selectors.link, elem, 'href'),
     });
   });
 
   return products;
+}
+
+function getElementAttribute($: CheerioStatic, selector: string, context: CheerioElement, attribute: string) {
+  const value = $(selector, context).attr(attribute)?.toString() ?? '';
+  if (!value) {
+    serverLogger.log('warn', `WARNING: the attribute ${attribute} or its CSS selector ${selector} was not found in ${context.name}`);
+  }
+  return value;
 }
 
 function getElementText($: CheerioStatic, selector: string, context: CheerioElement) {
@@ -71,7 +82,7 @@ async function getHTML(url: string) {
   serverLogger.log('info', `PUPPETEER: Loaded ${url}`);
 
   await scrollToBottom(page);
-  await page.waitFor(500);
+  await page.waitFor(1000);
   const html = await page.evaluate(() => {
     return document.documentElement.outerHTML;
   });
@@ -87,8 +98,8 @@ async function getHTML(url: string) {
 // https://stackoverflow.com/questions/51529332/puppeteer-scroll-down-until-you-cant-anymore
 async function scrollToBottom(page: puppeteer.Page) {
   serverLogger.log('info', `PUPPETEER: Commencing scroll on ${page.url()}`);
-  const distance = WINDOW_HEIGHT*(3/4); // should be less than or equal to window.innerHeight
-  const delay = 25;
+  const distance = WINDOW_HEIGHT*(1/2); // should be less than or equal to window.innerHeight
+  const delay = 100;
   while (await page.evaluate(() => document.scrollingElement!.scrollTop + window.innerHeight < document.scrollingElement!.scrollHeight)) {
     await page.evaluate((y: any) => { document.scrollingElement!.scrollBy(0, y); }, distance);
     await page.waitFor(delay);
