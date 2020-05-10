@@ -21,6 +21,7 @@
     "dev": "tsc-watch --onSuccess \"yarn start-debug\""
   },
   "dependencies": {
+    "@sendgrid/mail": "^7.1.0",
     "@types/milliseconds": "^0.0.29",
     "@types/mongoose": "^5.7.15",
     "axios": "^0.19.2",

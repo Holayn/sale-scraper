@@ -12,6 +12,7 @@ export interface IUserJob {
   keywords: string[];
   user: string;
   siteConfigId: string;
+  email: string;
 }
 
 export interface IResource {

@@ -3,6 +3,14 @@ import {IProduct, scrape} from './scrape';
 import {serverLogger} from './logger';
 import {store} from './index';
 import { DB } from './db';
+import {sendEmail} from './emailer';
+
+export interface IScrapedFilteredProducts {
+  keywords: string[];
+  name: string;
+  url: string;
+  products: IProduct[];
+}
 
 const db = new DB();
 
@@ -48,26 +56,34 @@ export async function getUserProducts(userId: string) {
 
 function processUserJobs(userJobs: IUserJob[]) {
   const retVal: {
-    [siteConfigId:string]: {
-      keywords: string[];
-      name: string;
-      url: string;
-      products: IProduct[];
-    }
+    [siteConfigId:string]: IScrapedFilteredProducts
   } = {};
 
+  const emails: Record<string, IScrapedFilteredProducts[]> = {};
+
   userJobs.forEach((userJob: IUserJob) => {
-    const {keywords, siteConfigId} = userJob;
+    const {keywords, siteConfigId, email} = userJob;
     const pastScrape = store.getScrape(siteConfigId);
     const scrapedProducts = pastScrape.products;
     const filteredProducts = filterProducts(scrapedProducts, keywords);
-    retVal[siteConfigId] = {
+    const result: IScrapedFilteredProducts = {
       keywords,
       products: filteredProducts,
       name: pastScrape.siteConfig.name,
       url: pastScrape.siteConfig.url,
+    };
+    retVal[siteConfigId] = result;
+
+    if (!emails[email]) {
+      emails[email] = [];
     }
+    emails[email].push(result);
   });
+
+  // send emails
+  for (const email in emails) {
+    sendEmail(email, emails[email]);
+  }
 
   return retVal;
 }
