@@ -4,10 +4,12 @@ import { scrape, IProduct } from './scrape';
 import { getSiteConfigs, getUserJobs, ISiteConfig, IUserJob } from './fetcher';
 import { DB } from './db';
 import {Store} from './store';
+import {middlewareLogger, serverLogger} from './logger';
 
 const PORT = process.env.PORT || 8000;
 
 const app = express();
+app.use(middlewareLogger);
 
 const db = new DB();
 
@@ -15,16 +17,12 @@ const store = new Store();
 
 (async function init() {
   await db.connect();
+  
+  await initialScrape();
 
-  app.get('/executeScrapes', async (req: express.Request, res: express.Response) => {
-    try {
-      const siteConfigs = await getSiteConfigs(db);
-      const scrapedProducts = await executeScrapes(siteConfigs);
-      res.send(scrapedProducts);
-    } catch (e) {
-      res.statusMessage = e;
-      res.sendStatus(500);
-    }
+  app.get('/getScrapes', async (req: express.Request, res: express.Response) => {
+    const scrapedProducts = store.state.pastRuns;
+    res.send(scrapedProducts);
   });
 
   app.get('/getUserProducts', async (req: express.Request, res: express.Response) => {
@@ -43,6 +41,11 @@ const store = new Store();
     console.log(`Listening on ${PORT}`);
   });
 })();
+
+async function initialScrape() {
+  const siteConfigs = await getSiteConfigs(db);
+  await executeScrapes(siteConfigs);
+}
 
 function processUserJobs(userJobs: IUserJob[]) {
   const retVal: {
@@ -77,6 +80,7 @@ function processUserJobs(userJobs: IUserJob[]) {
 }
 
 async function executeScrapes(siteConfigs: ISiteConfig[]) {
+  serverLogger.log('info', 'Executing all scrapes');
   const scrapedProductsMap: Record<string, {name: string, url: string, scrapedProducts: IProduct[]}> = {};
   for (let i=0; i<siteConfigs.length; i++) {
     const {id, scrapedProducts, name, url} = await executeScrape(siteConfigs[i]);
