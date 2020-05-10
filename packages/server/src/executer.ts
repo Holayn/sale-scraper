@@ -1,4 +1,4 @@
-import {ISiteConfig, fetchSiteConfigs, fetchUserJobs} from './fetcher';
+import {ISiteConfig, IUserJob, fetchSiteConfigs, fetchUserJobs} from './fetcher';
 import {IProduct, scrape} from './scrape';
 import {serverLogger} from './logger';
 import {store} from './index';
@@ -41,7 +41,44 @@ export async function executeScrape(siteConfig: ISiteConfig) {
   }
 }
 
-export async function getUserJobs(userId: string) {
+export async function getUserProducts(userId: string) {
   await init();
-  return await fetchUserJobs(db, userId);
+  return processUserJobs(await fetchUserJobs(db, userId));
+}
+
+function processUserJobs(userJobs: IUserJob[]) {
+  const retVal: {
+    [siteConfigId:string]: {
+      keywords: string[];
+      name: string;
+      url: string;
+      products: IProduct[];
+    }
+  } = {};
+
+  userJobs.forEach((userJob: IUserJob) => {
+    const {keywords, siteConfigId} = userJob;
+    const pastScrape = store.getScrape(siteConfigId);
+    const scrapedProducts = pastScrape.products;
+    const filteredProducts = filterProducts(scrapedProducts, keywords);
+    retVal[siteConfigId] = {
+      keywords,
+      products: filteredProducts,
+      name: pastScrape.siteConfig.name,
+      url: pastScrape.siteConfig.url,
+    }
+  });
+
+  return retVal;
+}
+
+function filterProducts(scrapedProducts: IProduct[], keywords: string[]) {
+  const products: IProduct[] = [];
+  scrapedProducts.forEach((scrapedProduct: IProduct) => {
+    const productName = scrapedProduct.name;
+    if (productName.match(keywords.join('|'))) {
+      products.push(scrapedProduct)
+    }
+  });
+  return products;
 }
