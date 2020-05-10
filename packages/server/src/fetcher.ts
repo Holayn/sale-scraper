@@ -10,6 +10,7 @@ export interface ISiteConfig {
 export interface IUserJob {
   id: string;
   keywords: string[];
+  excludeKeywords: string[];
   user: string;
   siteConfigId: string;
   email: string;

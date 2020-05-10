@@ -7,6 +7,7 @@ import {sendEmail} from './emailer';
 
 export interface IScrapedFilteredProducts {
   keywords: string[];
+  excludeKeywords: string[];
   name: string;
   url: string;
   products: IProduct[];
@@ -49,12 +50,12 @@ export async function executeScrape(siteConfig: ISiteConfig) {
   }
 }
 
-export async function getUserProducts(userId: string) {
+export async function getUserProducts(userId: string, sendEmail: boolean) {
   await init();
-  return processUserJobs(await fetchUserJobs(db, userId));
+  return processUserJobs(await fetchUserJobs(db, userId), sendEmail);
 }
 
-function processUserJobs(userJobs: IUserJob[]) {
+function processUserJobs(userJobs: IUserJob[], canSendEmail: boolean) {
   const retVal: {
     [siteConfigId:string]: IScrapedFilteredProducts
   } = {};
@@ -62,12 +63,13 @@ function processUserJobs(userJobs: IUserJob[]) {
   const emails: Record<string, IScrapedFilteredProducts[]> = {};
 
   userJobs.forEach((userJob: IUserJob) => {
-    const {keywords, siteConfigId, email} = userJob;
+    const {keywords, siteConfigId, email, excludeKeywords} = userJob;
     const pastScrape = store.getScrape(siteConfigId);
     const scrapedProducts = pastScrape.products;
-    const filteredProducts = filterProducts(scrapedProducts, keywords);
+    const filteredProducts = filterProducts(scrapedProducts, keywords, excludeKeywords);
     const result: IScrapedFilteredProducts = {
       keywords,
+      excludeKeywords,
       products: filteredProducts,
       name: pastScrape.siteConfig.name,
       url: pastScrape.siteConfig.url,
@@ -81,17 +83,22 @@ function processUserJobs(userJobs: IUserJob[]) {
   });
 
   // send emails
-  for (const email in emails) {
-    sendEmail(email, emails[email]);
+  if (canSendEmail) {
+    for (const email in emails) {
+      sendEmail(email, emails[email]);
+    }
   }
 
   return retVal;
 }
 
-function filterProducts(scrapedProducts: IProduct[], keywords: string[]) {
+function filterProducts(scrapedProducts: IProduct[], keywords: string[], excludeKeywords: string[]) {
   const products: IProduct[] = [];
   scrapedProducts.forEach((scrapedProduct: IProduct) => {
     const productName = scrapedProduct.name;
+    if (productName.match(excludeKeywords?.join('|').toLowerCase() ?? null)) {
+      return;
+    }
     if (productName.match(keywords.join('|').toLowerCase())) {
       products.push(scrapedProduct)
     }
