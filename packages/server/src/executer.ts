@@ -21,7 +21,7 @@ async function init() {
 
 export async function executeScrapes() {
   await init();
-  serverLogger.log('info', 'Executing all scrapes');
+  serverLogger.log('info', 'STARTED: Executing all scrapes');
   const siteConfigs: ISiteConfig[] = await fetchSiteConfigs(db);
   const scrapedProductsMap: Record<string, {name: string, url: string, scrapedProducts: IProduct[]}> = {};
   for (let i=0; i<siteConfigs.length; i++) {
@@ -32,6 +32,7 @@ export async function executeScrapes() {
       scrapedProducts,
     };
   }
+  serverLogger.log('info', 'FINISHED: Executing all scrapes');
   return scrapedProductsMap;
 }
 
