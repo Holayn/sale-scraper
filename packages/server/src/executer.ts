@@ -37,8 +37,8 @@ export async function executeScrapes() {
 }
 
 export async function executeScrape(siteConfig: ISiteConfig) {
-  const {id, url, name, selectors} = siteConfig;
-  const scrapedProducts = await scrape(url, selectors);
+  const {id, url, name, selectors, dynamicScrolling} = siteConfig;
+  const scrapedProducts = await scrape(url, selectors, dynamicScrolling);
   store.storeScrape(id, {
     scrapedProducts, 
     siteConfig

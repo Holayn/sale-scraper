@@ -1,5 +1,6 @@
 import cheerio from 'cheerio';
 import puppeteer from 'puppeteer';
+import axios from 'axios';
 
 import {serverLogger, PerformanceLogger} from './logger';
 
@@ -27,8 +28,8 @@ const browser = puppeteer.launch({
   headless: true,
 });
 
-export async function scrape(url: string, selectors: ISelectors) {
-  const html = await getHTML(url);
+export async function scrape(url: string, selectors: ISelectors, dynamicScrolling: boolean) {
+  const html = await getHTML(url, dynamicScrolling);
 
   const $ = cheerio.load(html);
 
@@ -68,31 +69,40 @@ function getElementText($: CheerioStatic, selector: string, context: CheerioElem
   return text;
 }
 
-async function getHTML(url: string) {
+async function getHTML(url: string, dynamicScrolling: boolean) {
   serverLogger.log('info', `getHTML() STARTED: Scraping HTML from ${url}`);
+  let html: string;
   let perf = new PerformanceLogger();
   perf.start();
-  const page = await (await browser).newPage();
-  await page.setViewport({
-    width: WINDOW_HEIGHT,
-    height: WINDOW_WIDTH,
-  });
-  await page.goto(url);
 
-  serverLogger.log('info', `PUPPETEER: Loaded ${url}`);
+  if (dynamicScrolling) {
+    // Use puppeteer to simulate scrolling so that dynamic content is loaded onto the page
+    const page = await (await browser).newPage();
+    await page.setViewport({
+      width: WINDOW_HEIGHT,
+      height: WINDOW_WIDTH,
+    });
+    await page.goto(url);
 
-  await scrollToBottom(page);
-  await page.waitFor(1000);
-  const html = await page.evaluate(() => {
-    return document.documentElement.outerHTML;
-  });
-  await page.close();
+    serverLogger.log('info', `PUPPETEER: Loaded ${url}`);
+
+    await scrollToBottom(page);
+    await page.waitFor(1000);
+    html = await page.evaluate(() => {
+      return document.documentElement.outerHTML;
+    });
+    await page.close();
+  } else {
+    html = (await axios.get(url)).data;
+  }
 
   serverLogger.log('info', `getHTML() FINISHED: Scraping HTML from ${url}`);
   perf.end();
   serverLogger.log('info', `getHTML() PERF: Scraping HTML from ${url} took ${perf.getTimeMS()} ms`);
   perf = null as any;
+
   return html;
+  
 }
 
 // https://stackoverflow.com/questions/51529332/puppeteer-scroll-down-until-you-cant-anymore

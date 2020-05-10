@@ -5,6 +5,7 @@ export interface ISiteConfig {
   selectors: ISelectors;
   url: string;
   name: string;
+  dynamicScrolling: boolean;
 }
 
 export interface IUserJob {
