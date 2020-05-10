@@ -92,7 +92,7 @@ function filterProducts(scrapedProducts: IProduct[], keywords: string[]) {
   const products: IProduct[] = [];
   scrapedProducts.forEach((scrapedProduct: IProduct) => {
     const productName = scrapedProduct.name;
-    if (productName.match(keywords.join('|'))) {
+    if (productName.match(keywords.join('|').toLowerCase())) {
       products.push(scrapedProduct)
     }
   });

@@ -27,7 +27,7 @@ export async function scrape(url: string, selectors: ISelectors) {
   const products: IProduct[] = [];
 
   scrapedProducts.each((i: number, elem: CheerioElement) => {
-    const productName = $(selectors.productName, elem).text().trim();
+    const productName = $(selectors.productName, elem).text().trim().toLowerCase();
     products.push({
       name: productName,
       originalPrice: $(selectors.originalPrice, elem).text(),
