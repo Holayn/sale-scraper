@@ -30,3 +30,20 @@ export const serverLogger = winston.createLogger({
     new winston.transports.Console()
   ],
 })
+
+https://stackoverflow.com/questions/48768758/measure-process-time-with-node-js
+const NS_PER_SEC = 1e9;
+const MS_PER_NS = 1e-6;
+export class PerformanceLogger {
+  time: any;
+  diff: any;
+  start() {
+    this.time = process.hrtime();
+  }
+  end() {
+    this.diff = process.hrtime(this.time);
+  }
+  getTimeMS() {
+    return Math.round((this.diff[0] * NS_PER_SEC + this.diff[1]) * MS_PER_NS);
+  }
+}

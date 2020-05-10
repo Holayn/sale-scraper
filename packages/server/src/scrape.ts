@@ -1,7 +1,7 @@
 import cheerio from 'cheerio';
 import puppeteer from 'puppeteer';
 
-import {serverLogger} from './logger';
+import {serverLogger, PerformanceLogger} from './logger';
 
 const WINDOW_HEIGHT = 1200;
 const WINDOW_WIDTH = 800;
@@ -58,7 +58,9 @@ function getElementText($: CheerioStatic, selector: string, context: CheerioElem
 }
 
 async function getHTML(url: string) {
-  serverLogger.log('info', `STARTED: Scraping HTML from ${url}`);
+  serverLogger.log('info', `getHTML() STARTED: Scraping HTML from ${url}`);
+  let perf = new PerformanceLogger();
+  perf.start();
   const page = await (await browser).newPage();
   await page.setViewport({
     width: WINDOW_HEIGHT,
@@ -75,7 +77,10 @@ async function getHTML(url: string) {
   });
   await page.close();
 
-  serverLogger.log('info', `FINISHED: Scraping HTML from ${url}`);
+  serverLogger.log('info', `getHTML() FINISHED: Scraping HTML from ${url}`);
+  perf.end();
+  serverLogger.log('info', `getHTML() PERF: Scraping HTML from ${url} took ${perf.getTimeMS()} ms`);
+  perf = null as any;
   return html;
 }
 
