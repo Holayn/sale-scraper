@@ -21,6 +21,7 @@
     "dev": "tsc-watch --onSuccess \"yarn start-debug\""
   },
   "dependencies": {
+    "@types/milliseconds": "^0.0.29",
     "@types/mongoose": "^5.7.15",
     "axios": "^0.19.2",
     "cheerio": "^1.0.0-rc.3",
@@ -28,6 +29,7 @@
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-winston": "^4.0.3",
+    "milliseconds": "^1.0.3",
     "mongoose": "^5.9.13",
     "winston": "^3.2.1"
   }

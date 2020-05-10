@@ -19,7 +19,7 @@ export interface IResource {
   getSiteConfigs: () => Promise<ISiteConfig[] | undefined>;
 }
 
-export async function getSiteConfigs(resource: IResource) {
+export async function fetchSiteConfigs(resource: IResource) {
   try {
     const configs = await resource.getSiteConfigs();
     return configs ?? [];
@@ -28,7 +28,7 @@ export async function getSiteConfigs(resource: IResource) {
   }
 }
 
-export async function getUserJobs(resource: IResource, userId: string) {
+export async function fetchUserJobs(resource: IResource, userId: string) {
   try {
     const configs = await resource.getUserJobs(userId);
     return configs ?? [];

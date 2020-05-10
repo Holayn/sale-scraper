@@ -54,6 +54,9 @@ export class DB implements IResource {
   }
 
   async connect() {
+    if (this.connection) {
+      return this.connection;
+    }
     try {
       this.connection = await mongoose.connect(url!, options);
       console.info('connected to db');

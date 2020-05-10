@@ -1,24 +1,24 @@
 import express from 'express';
 
-import { scrape, IProduct } from './scrape';
-import { getSiteConfigs, getUserJobs, ISiteConfig, IUserJob } from './fetcher';
-import { DB } from './db';
+import { IProduct } from './scrape';
+import { IUserJob } from './fetcher';
 import {Store} from './store';
-import {middlewareLogger, serverLogger} from './logger';
+import {middlewareLogger} from './logger';
+import {executeScrapes, getUserJobs} from './executer';
+import {Scheduler} from './scheduler';
 
 const PORT = process.env.PORT || 8000;
 
 const app = express();
 app.use(middlewareLogger);
 
-const db = new DB();
-
-const store = new Store();
+export const store = new Store();
+const scheduler = new Scheduler();
 
 (async function init() {
-  await db.connect();
-  
   await initialScrape();
+
+  scheduler.startRecurringScrapes();
 
   app.get('/getScrapes', async (req: express.Request, res: express.Response) => {
     const scrapedProducts = store.state.pastRuns;
@@ -28,7 +28,7 @@ const store = new Store();
   app.get('/getUserProducts', async (req: express.Request, res: express.Response) => {
     try {
       const userId = req.query.user_id as string;
-      const userJobs = await getUserJobs(db, userId);
+      const userJobs = await getUserJobs(userId);
       
       res.send(processUserJobs(userJobs));
     } catch (e) {
@@ -43,8 +43,7 @@ const store = new Store();
 })();
 
 async function initialScrape() {
-  const siteConfigs = await getSiteConfigs(db);
-  await executeScrapes(siteConfigs);
+  await executeScrapes();
 }
 
 function processUserJobs(userJobs: IUserJob[]) {
@@ -77,33 +76,4 @@ function processUserJobs(userJobs: IUserJob[]) {
   });
 
   return retVal;
-}
-
-async function executeScrapes(siteConfigs: ISiteConfig[]) {
-  serverLogger.log('info', 'Executing all scrapes');
-  const scrapedProductsMap: Record<string, {name: string, url: string, scrapedProducts: IProduct[]}> = {};
-  for (let i=0; i<siteConfigs.length; i++) {
-    const {id, scrapedProducts, name, url} = await executeScrape(siteConfigs[i]);
-    scrapedProductsMap[id] = {
-      name,
-      url,
-      scrapedProducts,
-    };
-  }
-  return scrapedProductsMap;
-}
-
-async function executeScrape(siteConfig: ISiteConfig) {
-  const {id, url, name, selectors} = siteConfig;
-  const scrapedProducts = await scrape(url, selectors);
-  store.storeScrape(id, {
-    scrapedProducts, 
-    siteConfig
-  });
-  return {
-    id,
-    name,
-    url,
-    scrapedProducts,
-  }
 }

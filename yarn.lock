@@ -104,6 +104,11 @@
     "@types/qs" "*"
     "@types/serve-static" "*"
 
+"@types/milliseconds@^0.0.29":
+  version "0.0.29"
+  resolved "https://registry.yarnpkg.com/@types/milliseconds/-/milliseconds-0.0.29.tgz#0cea47a66bf5b99089d99a521a75cfce5968859c"
+  integrity sha512-JXQwnlBGHY+Z1kN+PGdFl8C2Ew2/EHLf3pLwQ6ROLp2DIxH0sjgjdp3H0JlXeBus/KhE9C9vEdS5WAKIb/OcPg==
+
 "@types/mime@*":
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-2.0.1.tgz#dc488842312a7f075149312905b5e3c0b054c79d"
@@ -860,6 +865,11 @@ methods@~1.1.2:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/methods/-/methods-1.1.2.tgz#5529a4d67654134edcc5266656835b0f851afcee"
   integrity sha1-VSmk1nZUE07cxSZmVoNbD4Ua/O4=
+
+milliseconds@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/milliseconds/-/milliseconds-1.0.3.tgz#1ff437c4f734b138ef7c2cedba4d8880c7f5c2d8"
+  integrity sha1-H/Q3xPc0sTjvfCztuk2IgMf1wtg=
 
 mime-db@1.44.0:
   version "1.44.0"
