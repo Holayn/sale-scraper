@@ -1,19 +1,28 @@
 import {IProduct} from './scrape';
+// import {henlo} from './fwowa';
+import {ISiteConfig} from './fetcher';
 
 interface IPastRuns {
-  [key: string]: {
-    products: IProduct;
+  [siteConfigId: string]: {
+    products: IProduct[];
+    siteConfig: ISiteConfig;
   }
 }
 
 export class Store {
-  state: Record<string, any> = {
+  state = {
     pastRuns: {} as IPastRuns,
   };
-  storeScrape(scrapeId: string, products: IProduct[]) {
-    this.state.pastRuns[scrapeId] = {
-      products,
-    }
-    console.info(this.state.pastRuns);
+  storeScrape(siteConfigId: string, payload: {
+    scrapedProducts: IProduct[],
+    siteConfig: ISiteConfig,
+  }) {
+    this.state.pastRuns[siteConfigId] = {
+      products: payload.scrapedProducts,
+      siteConfig: payload.siteConfig,
+    };
+  };
+  getScrape(siteConfigId: string) {
+    return this.state.pastRuns[siteConfigId];
   }
 }

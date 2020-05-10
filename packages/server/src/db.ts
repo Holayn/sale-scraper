@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { ISelectors } from './scrape';
+import { IResource, ISiteConfig, IUserJob } from './fetcher';
 
 require('dotenv').config();
 
@@ -11,25 +12,29 @@ const options = {
   useUnifiedTopology: true,
 };
 
-interface IJobModelItem {
-  selectors: ISelectors;
-  keywords: string[];
-  url: string;
-  user: number;
-}
-
-interface IResponseItem {
+interface ISiteConfigResponseItem {
   _id: string;
-  _doc: IJobModelItem;
+  _doc: ISiteConfig;
+}
+interface IUserJobResponseItem {
+  _id: string;
+  _doc: IUserJob;
 }
 
-export class DB {
+function modelFactory(name: string, properties: Record<string, any>, collection: string) {
+  const schema = new mongoose.Schema(properties, {collection});
+  const model = mongoose.model(name, schema);
+  return model;
+}
+
+export class DB implements IResource {
   connection: any;
-  jobSchema: mongoose.Schema;
-  jobModel: any;
+
+  siteConfigModel: any;
+  userJobModel: any;
 
   constructor() {
-    this.jobSchema = new mongoose.Schema({
+    this.siteConfigModel = modelFactory('SiteConfig', {
       selectors: {
         productSelector: String,
         productName: String,
@@ -37,12 +42,15 @@ export class DB {
         salePrice: String,
         size: String,
       } as Record<keyof ISelectors, StringConstructor>,
-      keywords: [String],
       url: String,
-      user: Number,
-    });
+      name: String,
+    }, 'site-configs');
 
-    this.jobModel = mongoose.model('Job', this.jobSchema);
+    this.userJobModel = modelFactory('UserJob', {
+      keywords: [String],
+      userId: String,
+      siteConfigId: String,
+    }, 'user-jobs');
   }
 
   async connect() {
@@ -54,21 +62,41 @@ export class DB {
     }
   }
 
-  async getJobs() {
+  async getSiteConfigs() {
     try {
       if (!this.connection) {
         throw new Error('no connection to db');
       }
 
-      const query = this.jobModel.find({});
-      const res = await query.exec();
-
-      return res.map((job: IResponseItem) => {
+      const querySiteConfigs = this.siteConfigModel.find({});
+      const resSiteConfigs: ISiteConfigResponseItem[] = await querySiteConfigs.exec();
+      return resSiteConfigs.map((resSiteConfig: ISiteConfigResponseItem) => {
         return {
-          ...job._doc,
-          id: job._id,
-        };
+          ...resSiteConfig._doc,
+          id: resSiteConfig._id,
+        } as ISiteConfig;
       });
+    } catch (e) {
+      throw new Error(`something went wrong with fetching: ${e}`);
+    }
+  }
+
+  async getUserJobs(userId: string) {
+    try {
+      if (!this.connection) {
+        throw new Error('no connection to db');
+      }
+
+      const queryUserJobs = this.userJobModel.find({
+        userId,
+      });
+      const resUserJobs: IUserJobResponseItem[] = await queryUserJobs.exec();
+      return resUserJobs.map((resUserJob: IUserJobResponseItem) => {
+        return {
+          ...resUserJob._doc,
+          id: resUserJob._id,
+        } as IUserJob;
+      })
     } catch (e) {
       throw new Error(`something went wrong with fetching: ${e}`);
     }

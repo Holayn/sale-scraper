@@ -1,30 +1,37 @@
 import { ISelectors } from './scrape';
 
-export interface IJob {
-  selectors: ISelectors;
-  keywords: string[];
-  url: string;
-  user: number;
+export interface ISiteConfig {
   id: string;
+  selectors: ISelectors;
+  url: string;
+  name: string;
 }
 
-interface IResource {
-  getJobs: () => Promise<IJob[] | undefined>;
+export interface IUserJob {
+  id: string;
+  keywords: string[];
+  user: string;
+  siteConfigId: string;
 }
 
-export async function getScrapingJob(resource: IResource) {
+export interface IResource {
+  getUserJobs: (userId: string) => Promise<IUserJob[] | undefined>;
+  getSiteConfigs: () => Promise<ISiteConfig[] | undefined>;
+}
+
+export async function getSiteConfigs(resource: IResource) {
   try {
-    const jobs = await resource.getJobs();
-    const { id, url, selectors, keywords } = jobs?.[0] ?? {};
-    if (!url || !selectors || !keywords || !id) {
-      throw new Error('missing job info');
-    }
-    return {
-      id,
-      url,
-      selectors,
-      keywords,
-    };
+    const configs = await resource.getSiteConfigs();
+    return configs ?? [];
+  } catch (e) {
+    throw e;
+  }
+}
+
+export async function getUserJobs(resource: IResource, userId: string) {
+  try {
+    const configs = await resource.getUserJobs(userId);
+    return configs ?? [];
   } catch (e) {
     throw e;
   }

@@ -16,7 +16,7 @@ export interface ISelectors {
   size: string;
 }
 
-export async function scrape(url: string, selectors: ISelectors, keywords: string[]) {
+export async function scrape(url: string, selectors: ISelectors) {
   const res = await axios.get(url);
   const html = res.data;
 
@@ -28,14 +28,12 @@ export async function scrape(url: string, selectors: ISelectors, keywords: strin
 
   scrapedProducts.each((i: number, elem: CheerioElement) => {
     const productName = $(selectors.productName, elem).text().trim();
-    if (productName.match(keywords.join('|'))) {
-      products.push({
-        name: productName,
-        originalPrice: $(selectors.originalPrice, elem).text(),
-        salePrice: $(selectors.salePrice, elem).text(),
-        size: $(selectors.size, elem).text(),
-      });
-    }
+    products.push({
+      name: productName,
+      originalPrice: $(selectors.originalPrice, elem).text(),
+      salePrice: $(selectors.salePrice, elem).text(),
+      size: $(selectors.size, elem).text(),
+    });
   });
 
   return products;
