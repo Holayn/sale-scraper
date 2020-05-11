@@ -6,6 +6,7 @@ interface IPastRuns {
   [siteConfigId: string]: {
     products: IProduct[];
     siteConfig: ISiteConfig;
+    diff: IProduct[];
   }
 }
 
@@ -20,9 +21,33 @@ export class Store {
     this.state.pastRuns[siteConfigId] = {
       products: payload.scrapedProducts,
       siteConfig: payload.siteConfig,
+      diff: getProductsDiff(this.state.pastRuns[siteConfigId]?.products, payload.scrapedProducts),
     };
   };
   getScrape(siteConfigId: string) {
     return this.state.pastRuns[siteConfigId];
   }
+}
+
+function getProductsDiff(oldProducts: IProduct[], newProducts: IProduct[]): IProduct[] {
+  if (!oldProducts) {
+    return [];
+  }
+  const oldProductsSet: Set<string> = new Set();
+  oldProducts.forEach((product) => {
+    const key = `${product.name}_${product.salePrice}`;
+    oldProductsSet.add(key);
+  });
+
+  const res: IProduct[] = [];
+  newProducts.forEach((product) => {
+    const key = `${product.name}_${product.salePrice}`;
+    if (oldProductsSet.has(key)) {
+      return;
+    };
+    res.push(product);
+  });
+
+  return res;
+
 }
