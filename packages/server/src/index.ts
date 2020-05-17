@@ -16,7 +16,7 @@ const scheduler = new Scheduler();
 (async function init() {
   await initialScrape();
 
-  scheduler.startRecurringScrapes();
+  scheduler.startScheduledScrapes();
 
   app.get('/getScrapes', async (req: express.Request, res: express.Response) => {
     const scrapedProducts = store.state.pastRuns;
