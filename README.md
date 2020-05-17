@@ -10,7 +10,8 @@ Configured via configs stored in a mongodb instance.
 - `DB_PASS`
 - `PORT`
 - `SENDGRID_API_KEY`
-- `SCHEDULE_HOURS`
+- `SCHEDULE_HOURS` : comma-delineated UTC hours to run scraper and user jobs
+- `SERVER_URL`
 
 ### DB schema
 
