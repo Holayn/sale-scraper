@@ -18,7 +18,7 @@ export interface IUserJob {
 }
 
 export interface IResource {
-  getUserJobs: (userId: string) => Promise<IUserJob[] | undefined>;
+  getUserJobs: (query: Record<string, any>, userId?: string) => Promise<IUserJob[] | undefined>;
   getSiteConfigs: () => Promise<ISiteConfig[] | undefined>;
 }
 
@@ -33,7 +33,18 @@ export async function fetchSiteConfigs(resource: IResource) {
 
 export async function fetchUserJobs(resource: IResource, userId: string) {
   try {
-    const configs = await resource.getUserJobs(userId);
+    const configs = await resource.getUserJobs({
+      userId,
+    });
+    return configs ?? [];
+  } catch (e) {
+    throw e;
+  }
+}
+
+export async function fetchAllUsersJobs(resource: IResource) {
+  try {
+    const configs = await resource.getUserJobs({});
     return configs ?? [];
   } catch (e) {
     throw e;

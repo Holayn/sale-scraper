@@ -84,15 +84,13 @@ export class DB implements IResource {
     }
   }
 
-  async getUserJobs(userId: string) {
+  async getUserJobs(query: Record<string, any>) {
     try {
       if (!this.connection) {
         throw new Error('no connection to db');
       }
 
-      const queryUserJobs = this.userJobModel.find({
-        userId,
-      });
+      const queryUserJobs = this.userJobModel.find(query);
       const resUserJobs: IUserJobResponseItem[] = await queryUserJobs.exec();
       return resUserJobs.map((resUserJob: IUserJobResponseItem) => {
         return {

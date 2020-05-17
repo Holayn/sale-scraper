@@ -1,4 +1,4 @@
-import {ISiteConfig, IUserJob, fetchSiteConfigs, fetchUserJobs} from './fetcher';
+import {ISiteConfig, IUserJob, fetchSiteConfigs, fetchUserJobs, fetchAllUsersJobs} from './fetcher';
 import {IProduct, scrape} from './scrape';
 import {serverLogger} from './logger';
 import {store} from './index';
@@ -11,6 +11,7 @@ export interface IScrapedFilteredProducts {
   name: string;
   url: string;
   products: IProduct[];
+  diff: IProduct[];
 }
 
 const db = new DB();
@@ -25,10 +26,11 @@ export async function executeScrapes() {
   const siteConfigs: ISiteConfig[] = await fetchSiteConfigs(db);
   const scrapedProductsMap: Record<string, {name: string, url: string, scrapedProducts: IProduct[]}> = {};
   for (let i=0; i<siteConfigs.length; i++) {
-    const {id, scrapedProducts, name, url} = await executeScrape(siteConfigs[i]);
-    scrapedProductsMap[id] = {
-      name,
-      url,
+    const config = siteConfigs[i];
+    const scrapedProducts = await executeScrape(config);
+    scrapedProductsMap[config.id] = {
+      name: config.name,
+      url: config.url,
       scrapedProducts,
     };
   }
@@ -37,18 +39,13 @@ export async function executeScrapes() {
 }
 
 export async function executeScrape(siteConfig: ISiteConfig) {
-  const {id, url, name, selectors, dynamicScrolling} = siteConfig;
+  const {id, url, selectors, dynamicScrolling} = siteConfig;
   const scrapedProducts = await scrape(url, selectors, dynamicScrolling);
   store.storeScrape(id, {
     scrapedProducts, 
     siteConfig
   });
-  return {
-    id,
-    name,
-    url,
-    scrapedProducts,
-  }
+  return scrapedProducts;
 }
 
 export async function getUserProducts(userId: string) {
@@ -60,11 +57,11 @@ export async function getUserProducts(userId: string) {
   userJobs.forEach((userJob: IUserJob) => {
     const {keywords, siteConfigId, excludeKeywords} = userJob;
     const pastScrape = store.getScrape(siteConfigId);
-    const filteredProducts = filterProducts(pastScrape.products, keywords, excludeKeywords);
     const result: IScrapedFilteredProducts = {
       keywords,
       excludeKeywords,
-      products: filteredProducts,
+      products: filterProducts(pastScrape.products, keywords, excludeKeywords),
+      diff: filterProducts(pastScrape.diff, keywords, excludeKeywords),
       name: pastScrape.siteConfig.name,
       url: pastScrape.siteConfig.url,
     };
@@ -75,17 +72,23 @@ export async function getUserProducts(userId: string) {
   return retVal;
 }
 
+export async function runAllUsersJobs() {
+  const allUsersJobs = await fetchAllUsersJobs(db);
+  const emails = processUserJobs(allUsersJobs);
+  sendEmails(emails);
+}
+
 export function processUserJobs(userJobs: IUserJob[]) {
   const emails: Record<string, IScrapedFilteredProducts[]> = {};
 
   userJobs.forEach((userJob: IUserJob) => {
     const {keywords, siteConfigId, email, excludeKeywords} = userJob;
     const pastScrape = store.getScrape(siteConfigId);
-    const filteredProducts = filterProducts(pastScrape.products, keywords, excludeKeywords);
     const result: IScrapedFilteredProducts = {
       keywords,
       excludeKeywords,
-      products: filteredProducts,
+      products: filterProducts(pastScrape.products, keywords, excludeKeywords),
+      diff: filterProducts(pastScrape.diff, keywords, excludeKeywords),
       name: pastScrape.siteConfig.name,
       url: pastScrape.siteConfig.url,
     };
