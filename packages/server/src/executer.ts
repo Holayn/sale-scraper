@@ -96,6 +96,10 @@ export function processUserJobs(userJobs: IUserJob[]) {
     if (!emails[email]) {
       emails[email] = [];
     }
+    // don't add a result if there's no difference between the last scrape
+    if (result.diff.length === 0) {
+      return;
+    }
     emails[email].push(result);
   });
 

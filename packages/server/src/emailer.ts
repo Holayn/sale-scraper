@@ -4,6 +4,8 @@ import {IScrapedFilteredProducts} from './executer';
 
 require('dotenv').config();
 
+const SERVER_URL = process.env.SERVER_URL || 'localhost:8000';
+
 if (!process.env.SENDGRID_API_KEY) {
   throw new Error('no sendgrid api key');
 }
@@ -15,11 +17,12 @@ export async function sendEmail(email: string, productsResult: IScrapedFilteredP
   productsResult.forEach((productResult: IScrapedFilteredProducts) => {
     const sectionHtml = `
     <h3>${productResult.name} from ${productResult.url}</h3>
-    <h5>Filtering on ${productResult.keywords}</h5>
+    <h4>New sale items since last scrape</h4>
+    <h5>Filtering on ${productResult.keywords} excluding ${productResult.excludeKeywords}</h5>
     Products:
     ${(() => {
       let html = ``;
-      productResult.products.forEach((product) => {
+      productResult.diff.forEach((product) => {
         html += `
           <ul>
             <li>
@@ -39,6 +42,7 @@ export async function sendEmail(email: string, productsResult: IScrapedFilteredP
       });
       return html;
     })()}
+    <h5>Visit ${SERVER_URL}/getUserProducts?user_id=<YOUR_USER_ID> for all your sale items</h5>
     `
     html += sectionHtml;
   });
@@ -47,8 +51,8 @@ export async function sendEmail(email: string, productsResult: IScrapedFilteredP
     html,
     to: email,
     from: 'rc.revenge@gmail.com',
-    subject: 'Sale Items',
-    text: 'Sale Items',
+    subject: 'New Sale Items',
+    text: 'New Sale Items',
   };
 
   try {
