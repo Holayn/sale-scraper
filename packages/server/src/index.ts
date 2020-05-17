@@ -26,7 +26,7 @@ const scheduler = new Scheduler();
   app.get('/getUserProducts', async (req: express.Request, res: express.Response) => {
     try {
       const userId = req.query.user_id as string;
-      res.send(await getUserProducts(userId, false));
+      res.send(await getUserProducts(userId));
     } catch (e) {
       res.statusMessage = e;
       res.sendStatus(500);

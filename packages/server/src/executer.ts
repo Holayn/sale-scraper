@@ -51,23 +51,16 @@ export async function executeScrape(siteConfig: ISiteConfig) {
   }
 }
 
-export async function getUserProducts(userId: string, sendEmail: boolean) {
-  await init();
-  return processUserJobs(await fetchUserJobs(db, userId), sendEmail);
-}
-
-function processUserJobs(userJobs: IUserJob[], canSendEmail: boolean) {
+export async function getUserProducts(userId: string) {
   const retVal: {
     [siteConfigId:string]: IScrapedFilteredProducts
   } = {};
 
-  const emails: Record<string, IScrapedFilteredProducts[]> = {};
-
+  const userJobs = await fetchUserJobs(db, userId);
   userJobs.forEach((userJob: IUserJob) => {
-    const {keywords, siteConfigId, email, excludeKeywords} = userJob;
+    const {keywords, siteConfigId, excludeKeywords} = userJob;
     const pastScrape = store.getScrape(siteConfigId);
-    const scrapedProducts = pastScrape.products;
-    const filteredProducts = filterProducts(scrapedProducts, keywords, excludeKeywords);
+    const filteredProducts = filterProducts(pastScrape.products, keywords, excludeKeywords);
     const result: IScrapedFilteredProducts = {
       keywords,
       excludeKeywords,
@@ -75,7 +68,27 @@ function processUserJobs(userJobs: IUserJob[], canSendEmail: boolean) {
       name: pastScrape.siteConfig.name,
       url: pastScrape.siteConfig.url,
     };
+
     retVal[siteConfigId] = result;
+  });
+
+  return retVal;
+}
+
+export function processUserJobs(userJobs: IUserJob[]) {
+  const emails: Record<string, IScrapedFilteredProducts[]> = {};
+
+  userJobs.forEach((userJob: IUserJob) => {
+    const {keywords, siteConfigId, email, excludeKeywords} = userJob;
+    const pastScrape = store.getScrape(siteConfigId);
+    const filteredProducts = filterProducts(pastScrape.products, keywords, excludeKeywords);
+    const result: IScrapedFilteredProducts = {
+      keywords,
+      excludeKeywords,
+      products: filteredProducts,
+      name: pastScrape.siteConfig.name,
+      url: pastScrape.siteConfig.url,
+    };
 
     if (!emails[email]) {
       emails[email] = [];
@@ -83,14 +96,13 @@ function processUserJobs(userJobs: IUserJob[], canSendEmail: boolean) {
     emails[email].push(result);
   });
 
-  // send emails
-  if (canSendEmail) {
-    for (const email in emails) {
-      sendEmail(email, emails[email]);
-    }
-  }
+  return emails;
+}
 
-  return retVal;
+export function sendEmails(emails:  Record<string, IScrapedFilteredProducts[]>) {
+  for (const email in emails) {
+    sendEmail(email, emails[email]);
+  }
 }
 
 function filterProducts(scrapedProducts: IProduct[], keywords: string[], excludeKeywords: string[]) {
