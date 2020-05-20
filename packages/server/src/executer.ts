@@ -1,9 +1,9 @@
-import {ISiteConfig, IUserJob, fetchSiteConfigs, fetchUserJobs, fetchAllUsersJobs} from './fetcher';
-import {IProduct, scrape} from './scrape';
-import {serverLogger} from './logger';
-import {store} from './index';
+import { ISiteConfig, IUserJob, fetchSiteConfigs, fetchUserJobs, fetchAllUsersJobs } from './fetcher';
+import { IProduct, scrape } from './scrape';
+import { serverLogger } from './logger';
+import { store } from './index';
 import { DB } from './db';
-import {sendEmail} from './emailer';
+import { sendEmail } from './emailer';
 
 export interface IScrapedFilteredProducts {
   keywords: string[];
@@ -21,41 +21,45 @@ async function init() {
 }
 
 export async function executeScrapes() {
-  await init();
-  serverLogger.log('info', 'STARTED: Executing all scrapes');
-  const siteConfigs: ISiteConfig[] = await fetchSiteConfigs(db);
-  const scrapedProductsMap: Record<string, {name: string, url: string, scrapedProducts: IProduct[]}> = {};
-  for (let i=0; i<siteConfigs.length; i++) {
-    const config = siteConfigs[i];
-    const scrapedProducts = await executeScrape(config);
-    scrapedProductsMap[config.id] = {
-      name: config.name,
-      url: config.url,
-      scrapedProducts,
-    };
+  try {
+    await init();
+    serverLogger.log('info', 'STARTED: Executing all scrapes');
+    const siteConfigs: ISiteConfig[] = await fetchSiteConfigs(db);
+    const scrapedProductsMap: Record<string, {name: string, url: string, scrapedProducts: IProduct[]}> = {};
+    for (let i = 0; i < siteConfigs.length; i++) {
+      const config = siteConfigs[i];
+      const scrapedProducts = await executeScrape(config);
+      scrapedProductsMap[config.id] = {
+        name: config.name,
+        url: config.url,
+        scrapedProducts,
+      };
+    }
+    serverLogger.log('info', 'FINISHED: Executing all scrapes');
+    return scrapedProductsMap;
+  } catch (e) {
+    serverLogger.error('ERROR', e);
   }
-  serverLogger.log('info', 'FINISHED: Executing all scrapes');
-  return scrapedProductsMap;
 }
 
 export async function executeScrape(siteConfig: ISiteConfig) {
-  const {id, url, selectors, dynamicScrolling} = siteConfig;
+  const { id, url, selectors, dynamicScrolling } = siteConfig;
   const scrapedProducts = await scrape(url, selectors, dynamicScrolling);
   store.storeScrape(id, {
-    scrapedProducts, 
-    siteConfig
+    scrapedProducts,
+    siteConfig,
   });
   return scrapedProducts;
 }
 
 export async function getUserProducts(userId: string) {
   const retVal: {
-    [siteConfigId:string]: IScrapedFilteredProducts
+    [siteConfigId:string]: IScrapedFilteredProducts,
   } = {};
 
   const userJobs = await fetchUserJobs(db, userId);
   userJobs.forEach((userJob: IUserJob) => {
-    const {keywords, siteConfigId, excludeKeywords} = userJob;
+    const { keywords, siteConfigId, excludeKeywords } = userJob;
     const pastScrape = store.getScrape(siteConfigId);
     const result: IScrapedFilteredProducts = {
       keywords,
@@ -73,16 +77,21 @@ export async function getUserProducts(userId: string) {
 }
 
 export async function runAllUsersJobs() {
-  const allUsersJobs = await fetchAllUsersJobs(db);
-  const emails = processUserJobs(allUsersJobs);
-  sendEmails(emails);
+  try {
+    serverLogger.info('EXECUTER: RUNNING JOBS FOR ALL USERS');
+    const allUsersJobs = await fetchAllUsersJobs(db);
+    const emails = processUserJobs(allUsersJobs);
+    sendEmails(emails);
+  } catch (e) {
+    serverLogger.error('ERROR', e);
+  }
 }
 
 export function processUserJobs(userJobs: IUserJob[]) {
   const emails: Record<string, IScrapedFilteredProducts[]> = {};
 
   userJobs.forEach((userJob: IUserJob) => {
-    const {keywords, siteConfigId, email, excludeKeywords} = userJob;
+    const { keywords, siteConfigId, email, excludeKeywords } = userJob;
     const pastScrape = store.getScrape(siteConfigId);
     const result: IScrapedFilteredProducts = {
       keywords,
@@ -120,7 +129,7 @@ function filterProducts(scrapedProducts: IProduct[], keywords: string[], exclude
       return;
     }
     if (productName.match(keywords.join('|').toLowerCase())) {
-      products.push(scrapedProduct)
+      products.push(scrapedProduct);
     }
   });
   return products;

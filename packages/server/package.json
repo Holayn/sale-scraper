@@ -25,6 +25,7 @@
     "@types/milliseconds": "^0.0.29",
     "@types/mongoose": "^5.7.15",
     "@types/puppeteer": "^2.0.1",
+    "@types/winston-loggly-bulk": "^3.0.0",
     "axios": "^0.19.2",
     "cheerio": "^1.0.0-rc.3",
     "cors": "^2.8.5",
@@ -35,6 +36,7 @@
     "milliseconds": "^1.0.3",
     "mongoose": "^5.9.13",
     "puppeteer": "^3.0.4",
-    "winston": "^3.2.1"
+    "winston": "^3.2.1",
+    "winston-loggly-bulk": "^3.1.0"
   }
 }

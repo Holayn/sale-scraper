@@ -1,9 +1,9 @@
 import express from 'express';
 
-import {Store} from './store';
-import {middlewareLogger} from './logger';
-import {executeScrapes, getUserProducts} from './executer';
-import {Scheduler} from './scheduler';
+import { Store } from './store';
+import { middlewareLogger } from './logger';
+import { executeScrapes, getUserProducts } from './executer';
+import { Scheduler } from './scheduler';
 
 const PORT = process.env.PORT || 8000;
 

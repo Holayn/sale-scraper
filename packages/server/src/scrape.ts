@@ -2,7 +2,7 @@ import cheerio from 'cheerio';
 import puppeteer from 'puppeteer';
 import axios from 'axios';
 
-import {serverLogger, PerformanceLogger} from './logger';
+import { serverLogger, PerformanceLogger } from './logger';
 
 const WINDOW_HEIGHT = 1200;
 const WINDOW_WIDTH = 800;
@@ -102,13 +102,13 @@ async function getHTML(url: string, dynamicScrolling: boolean) {
   perf = null as any;
 
   return html;
-  
+
 }
 
 // https://stackoverflow.com/questions/51529332/puppeteer-scroll-down-until-you-cant-anymore
 async function scrollToBottom(page: puppeteer.Page) {
   serverLogger.log('info', `PUPPETEER: Commencing scroll on ${page.url()}`);
-  const distance = WINDOW_HEIGHT*(1/2); // should be less than or equal to window.innerHeight
+  const distance = WINDOW_HEIGHT * (1 / 2); // should be less than or equal to window.innerHeight
   const delay = 100;
   while (await page.evaluate(() => document.scrollingElement!.scrollTop + window.innerHeight < document.scrollingElement!.scrollHeight)) {
     await page.evaluate((y: any) => { document.scrollingElement!.scrollBy(0, y); }, distance);

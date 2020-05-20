@@ -1,13 +1,13 @@
-import {IProduct} from './scrape';
+import { IProduct } from './scrape';
 // import {henlo} from './fwowa';
-import {ISiteConfig} from './fetcher';
+import { ISiteConfig } from './fetcher';
 
 interface IPastRuns {
   [siteConfigId: string]: {
     products: IProduct[];
     siteConfig: ISiteConfig;
     diff: IProduct[];
-  }
+  };
 }
 
 export class Store {
@@ -23,7 +23,7 @@ export class Store {
       siteConfig: payload.siteConfig,
       diff: getProductsDiff(this.state.pastRuns[siteConfigId]?.products, payload.scrapedProducts),
     };
-  };
+  }
   getScrape(siteConfigId: string) {
     return this.state.pastRuns[siteConfigId];
   }
@@ -44,7 +44,7 @@ function getProductsDiff(oldProducts: IProduct[], newProducts: IProduct[]): IPro
     const key = `${product.name}_${product.salePrice}`;
     if (oldProductsSet.has(key)) {
       return;
-    };
+    }
     res.push(product);
   });
 

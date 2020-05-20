@@ -14,6 +14,8 @@ Configured via configs stored in a mongodb instance.
 - `SENDGRID_API_KEY`
 - `SCHEDULE_HOURS` : comma-delineated UTC hours to run scraper and user jobs. Default value: 13,17,21
 - `SERVER_URL`: added to sent email so other endpoints may be hit
+- `LOGGLY_CUSTOMER_TOKEN`
+- `LOGGLY_SUBDOMAIN`
 
 ### Endpoints
 

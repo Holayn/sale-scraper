@@ -22,7 +22,7 @@ interface IUserJobResponseItem {
 }
 
 function modelFactory(name: string, properties: Record<string, any>, collection: string) {
-  const schema = new mongoose.Schema(properties, {collection});
+  const schema = new mongoose.Schema(properties, { collection });
   const model = mongoose.model(name, schema);
   return model;
 }
@@ -97,7 +97,7 @@ export class DB implements IResource {
           ...resUserJob._doc,
           id: resUserJob._id,
         } as IUserJob;
-      })
+      });
     } catch (e) {
       throw new Error(`something went wrong with fetching: ${e}`);
     }

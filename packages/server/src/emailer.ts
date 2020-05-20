@@ -1,6 +1,7 @@
 import sendgrid from '@sendgrid/mail';
 
-import {IScrapedFilteredProducts} from './executer';
+import { IScrapedFilteredProducts } from './executer';
+import { serverLogger } from './logger';
 
 require('dotenv').config();
 
@@ -12,7 +13,7 @@ if (!process.env.SENDGRID_API_KEY) {
 sendgrid.setApiKey(process.env.SENDGRID_API_KEY as string);
 
 export async function sendEmail(email: string, productsResult: IScrapedFilteredProducts[]) {
-  let html = ``;
+  let html = '';
 
   productsResult.forEach((productResult: IScrapedFilteredProducts) => {
     const sectionHtml = `
@@ -21,7 +22,7 @@ export async function sendEmail(email: string, productsResult: IScrapedFilteredP
     <h5>Filtering on ${productResult.keywords} excluding ${productResult.excludeKeywords}</h5>
     Products:
     ${(() => {
-      let html = ``;
+      let html = '';
       productResult.diff.forEach((product) => {
         html += `
           <ul>
@@ -43,7 +44,7 @@ export async function sendEmail(email: string, productsResult: IScrapedFilteredP
       return html;
     })()}
     <h5>Visit ${SERVER_URL}/getUserProducts?user_id=<YOUR_USER_ID> for all your sale items</h5>
-    `
+    `;
     html += sectionHtml;
   });
 
@@ -58,10 +59,6 @@ export async function sendEmail(email: string, productsResult: IScrapedFilteredP
   try {
     await sendgrid.send(msg);
   } catch (error) {
-    console.error(error);
- 
-    if (error.response) {
-      console.error(error.response.body)
-    }
+    serverLogger.error('ERROR', error);
   }
 }

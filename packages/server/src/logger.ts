@@ -1,5 +1,8 @@
 import winston from 'winston';
 import expressWinston from 'express-winston';
+import loggly from 'winston-loggly-bulk';
+
+require('dotenv').config();
 
 export const middlewareLogger = expressWinston.logger({
   transports: [
@@ -21,17 +24,25 @@ const myFormat = printf(({ level, message, timestamp }) => {
   return `${timestamp} ${level}: ${message}`;
 });
 export const serverLogger = winston.createLogger({
-  level: 'info', 
+  level: 'info',
   format: combine(
     timestamp(),
-    myFormat
+    myFormat,
   ),
   transports: [
-    new winston.transports.Console()
+    new winston.transports.Console(),
   ],
-})
+});
+if (process.env.LOGGLY_SUBDOMAIN && process.env.LOGGLY_CUSTOMER_TOKEN) {
+  serverLogger.add(new loggly.Loggly({
+    token: process.env.LOGGLY_CUSTOMER_TOKEN,
+    subdomain: process.env.LOGGLY_SUBDOMAIN,
+    tags: ['sale-scraper-server'],
+    json: true,
+  }));
+}
 
-https://stackoverflow.com/questions/48768758/measure-process-time-with-node-js
+// https://stackoverflow.com/questions/48768758/measure-process-time-with-node-js
 const NS_PER_SEC = 1e9;
 const MS_PER_NS = 1e-6;
 export class PerformanceLogger {
