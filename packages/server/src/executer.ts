@@ -117,7 +117,9 @@ export function processUserJobs(userJobs: IUserJob[]) {
 
 export function sendEmails(emails:  Record<string, IScrapedFilteredProducts[]>) {
   for (const email in emails) {
-    sendEmail(email, emails[email]);
+    if (emails[email].length > 0) {
+      sendEmail(email, emails[email]);
+    }
   }
 }
 
