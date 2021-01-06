@@ -26,7 +26,7 @@
     "@types/mongoose": "^5.7.15",
     "@types/puppeteer": "^2.0.1",
     "@types/winston-loggly-bulk": "^3.0.0",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "cheerio": "^1.0.0-rc.3",
     "cors": "^2.8.5",
     "dayjs": "^1.8.27",
